@@ -1,0 +1,346 @@
+import React, { useState } from 'react';
+import { ArrowLeft, Eye, EyeOff, Users } from 'lucide-react';
+
+interface SupplierRegisterProps {
+  onRegister: () => void;
+  onBack: () => void;
+}
+
+const SupplierRegister: React.FC<SupplierRegisterProps> = ({ onRegister, onBack }) => {
+  const [formData, setFormData] = useState({
+    businessName: '',
+    ownerName: '',
+    email: '',
+    mobile: '',
+    password: '',
+    confirmPassword: '',
+    language: '',
+    goodsTypes: [] as string[],
+    location: '',
+    agreeTerms: false
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const languageOptions = ['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Marathi', 'Gujarati'];
+  const goodsTypeOptions = [
+    'Electronics', 'Textiles', 'Food & Beverages', 'Pharmaceuticals', 
+    'Automotive', 'Construction Materials', 'Chemicals', 'Machinery'
+  ];
+
+  const validatePassword = (password: string): boolean => {
+    const hasMinLength = password.length >= 8;
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return hasMinLength && hasNumber && hasSpecialChar;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.businessName) newErrors.businessName = 'Business name is required';
+    if (!formData.ownerName) newErrors.ownerName = 'Owner name is required';
+    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.mobile) newErrors.mobile = 'Mobile number is required';
+    if (!formData.language) newErrors.language = 'Language preference is required';
+    if (formData.goodsTypes.length === 0) newErrors.goodsTypes = 'Select at least one goods type';
+    if (!formData.location) newErrors.location = 'Location is required';
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = 'Password must be 8+ characters with 1 number and 1 special character';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Confirm password is required';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = 'You must agree to the terms and conditions';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Simulate registration success
+    onRegister();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      
+      if (name === 'goodsTypes') {
+        setFormData(prev => ({
+          ...prev,
+          goodsTypes: checked 
+            ? [...prev.goodsTypes, value]
+            : prev.goodsTypes.filter(item => item !== value)
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: checked }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
+        style={{
+          backgroundImage: `url('https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')`
+        }}
+      />
+      
+      <div className="relative z-10 max-w-2xl w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <button
+            onClick={onBack}
+            className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back
+          </button>
+
+          <div className="text-center mb-8">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-lg inline-block mb-4">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Supplier Registration</h2>
+            <p className="text-gray-600 mt-2">Join our network of trusted suppliers</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Business Name *
+                </label>
+                <input
+                  type="text"
+                  name="businessName"
+                  value={formData.businessName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.businessName ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter business name"
+                />
+                {errors.businessName && <p className="mt-1 text-sm text-red-600">{errors.businessName}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Owner Name *
+                </label>
+                <input
+                  type="text"
+                  name="ownerName"
+                  value={formData.ownerName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.ownerName ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter owner name"
+                />
+                {errors.ownerName && <p className="mt-1 text-sm text-red-600">{errors.ownerName}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter email address"
+                />
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mobile Number *
+                </label>
+                <input
+                  type="tel"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.mobile ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter mobile number"
+                />
+                {errors.mobile && <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Language Preference *
+              </label>
+              <select
+                name="language"
+                value={formData.language}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.language ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Select preferred language</option>
+                {languageOptions.map(lang => (
+                  <option key={lang} value={lang}>{lang}</option>
+                ))}
+              </select>
+              {errors.language && <p className="mt-1 text-sm text-red-600">{errors.language}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Types of Goods (Select multiple) *
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {goodsTypeOptions.map(type => (
+                  <label key={type} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="goodsTypes"
+                      value={type}
+                      checked={formData.goodsTypes.includes(type)}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{type}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.goodsTypes && <p className="mt-1 text-sm text-red-600">{errors.goodsTypes}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Location *
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.location ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter your location"
+              />
+              {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 ${
+                      errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Create password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                <p className="mt-1 text-xs text-gray-500">8+ chars, 1 number, 1 special character</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Confirm password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="agreeTerms"
+                  checked={formData.agreeTerms}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">
+                  I agree to the <a href="#" className="text-blue-600 hover:text-blue-800">Terms & Conditions</a>
+                </span>
+              </label>
+              {errors.agreeTerms && <p className="mt-1 text-sm text-red-600">{errors.agreeTerms}</p>}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Register Now
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SupplierRegister;
